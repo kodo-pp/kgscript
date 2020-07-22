@@ -1,0 +1,146 @@
+topcode = {
+    SOI ~ code ~ EOI
+}
+
+code = {
+    command ~ (newline ~ command)* ~ newline?
+}
+
+command = {
+    ns_def | fn_def | assignment | expression | nothing
+}
+
+nothing = { "" }
+
+ns_def = {
+    "ns" ~ name ~ block
+}
+
+fn_def = {
+    "fn" ~ name ~ param_list? ~ block
+}
+
+raw_name = @{
+    (ASCII_ALPHA | "_")
+    ~ (ASCII_ALPHANUMERIC | "_")*
+}
+
+name = {
+    !keyword ~ raw_name
+}
+
+param_list = {
+    "|" ~ name+
+}
+
+block = {
+    "{" ~ code ~ "}"
+}
+
+assignment = {
+    name ~ "=" ~ expression
+}
+
+expression = {
+    expr_logical_sum
+}
+
+literal = {
+    lit_string | lit_char | lit_float | lit_int | lit_bool
+}
+
+newline = _{
+    ("\n" | "\r")+
+}
+
+expr_logical_sum  = { expr_logical_prod ~ ("or"             ~ expr_logical_prod)* }
+expr_logical_prod = { expr_test         ~ ("and"            ~ expr_test        )* }
+expr_test         = { expr_sum          ~ (operator_test    ~ expr_sum         )* }
+expr_sum          = { expr_product      ~ (operator_sum     ~ expr_product     )* }
+expr_product      = { expr_call         ~ (operator_product ~ expr_call        )* }
+
+expr_call = {
+    expr_half_atom+
+}
+
+expr_half_atom = {
+    unop ~ expr_half_atom
+    | expr_atom
+}
+
+expr_atom = {
+    literal
+    | name
+    | ("(" ~ expression ~ ")")
+}
+
+lit_string = @{
+    "\""
+    ~ (!"\"" ~ ANY)*
+    ~ "\""
+}
+
+lit_char = @{
+    "'"
+    ~ (!"'" ~ ANY)
+    ~ "'"
+}
+
+lit_int = @{
+    ('0'..'9')+
+}
+
+lit_float = ${
+    lit_float_part_int ~ (
+        lit_float_part_frac ~ lit_float_part_exp?
+        | lit_float_part_frac? ~ lit_float_part_exp
+    )
+}
+
+lit_float_part_int = @{
+    ('0'..'9')+
+}
+
+lit_float_part_frac = @{
+    "." ~ ('0'..'9')+
+}
+
+lit_float_part_exp = @{
+    "e"
+    ~ ("+" | "-")?
+    ~ ('0'..'9')+
+}
+
+lit_bool = @{
+    "true" | "false"
+}
+
+keyword = @{
+    "or" | "and" | lit_bool | "fn" | "ns"
+}
+
+operator_test = @{
+    "==" | "<=" | ">=" | "!=" | "<" | ">"
+}
+
+operator_sum = @{
+    "+" | "-"
+}
+
+operator_product = @{
+    "*" | "/" | "//" | "%"
+}
+
+unop = @{
+    "!"
+}
+
+COMMENT = _{
+    "#"
+    ~ (!newline ~ ANY)*
+    ~ newline
+}
+
+WHITESPACE = _{
+    " " | "\t"
+}
