@@ -28,12 +28,18 @@ impl Code {
     }
 }
 
+#[derive(Clone)]
+pub struct Function {
+    pub parameters: Vec<Name>,
+    pub body: Code,
+}
 
 #[derive(Clone)]
 pub enum Statement {
     NamespaceDef { name: Name, body: Code },
-    FunctionDef { name: Name, parameters: Vec<Name>, body: Code },
+    FunctionDef { name: Name, function: Function },
     Assignment { target: Name, expr: Expr },
+
     Expression(Expr),
 }
 
@@ -67,4 +73,5 @@ pub enum Expr {
     CharLiteral { value: char },
     IntLiteral { value: i64 },
     BoolLiteral { value: bool },
+    BlockLiteral { value: Function },
 }
