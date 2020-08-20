@@ -7,17 +7,31 @@ code = {
 }
 
 command = {
-    ns_def | fn_def | assignment | expression | nothing
+    ns_def | fn_def | assignment | for_loop | while_loop | expression | nothing
 }
 
 nothing = { "" }
 
 ns_def = {
-    "ns" ~ name ~ block
+    "ns" ~ name ~ block0
 }
 
 fn_def = {
-    "fn" ~ name ~ param_list? ~ block
+    "fn" ~ name ~ param_list? ~ block0
+}
+
+for_loop = {
+    "for" ~ name ~ "in" ~ expression ~ block0
+}
+
+while_loop = {
+    "while" ~ expression ~ block0
+}
+
+if_expr = {
+    "if" ~ expression ~ block0
+    ~ ("elif" ~ expression ~ block0)*
+    ~ ("else" ~ block0)?
 }
 
 raw_name = @{
@@ -33,8 +47,16 @@ param_list = {
     "|" ~ name+
 }
 
-block = {
+block0 = {
     "{" ~ code ~ "}"
+}
+
+block_with_args = {
+    "@" ~ block_arglist ~ block0
+}
+
+block_arglist = {
+    name ~ ("," ~ name)*
 }
 
 assignment = {
@@ -42,11 +64,17 @@ assignment = {
 }
 
 expression = {
-    expr_logical_sum
+    if_expr | block_any | expr_logical_sum
 }
 
 literal = {
-    lit_string | lit_char | lit_float | lit_int | lit_bool
+    lit_string | lit_char | lit_float | lit_int | lit_bool | lit_nothing
+}
+
+lit_nothing = { "nothing" }
+
+block_any = {
+    block0 | block_with_args
 }
 
 newline = _{
@@ -116,7 +144,7 @@ lit_bool = @{
 }
 
 keyword = @{
-    "or" | "and" | lit_bool | "fn" | "ns"
+    "or" | "and" | lit_bool | "fn" | "ns" | "for" | "while" | "if" | "in" | "nothing"
 }
 
 operator_test = @{
